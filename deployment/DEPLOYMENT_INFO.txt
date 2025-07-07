@@ -1,0 +1,18 @@
+SyndicApp Deployment Package
+============================
+
+Created: Mon Jul  7 14:26:40 +01 2025
+Version: 1.0.0
+
+Contents:
+- frontend/     : Built React app (upload to public_html)
+- backend/      : Node.js API (deploy to VPS or external service)
+- deploy.md     : Complete deployment guide
+
+Next Steps:
+1. Follow the instructions in deploy.md
+2. Update environment variables
+3. Upload files to your hosting provider
+4. Test the application
+
+Good luck! 🚀
