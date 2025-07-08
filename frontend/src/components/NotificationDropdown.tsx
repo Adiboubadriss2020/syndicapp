@@ -4,7 +4,6 @@ import {
   IconButton,
   Badge,
   Menu,
-  MenuItem,
   Typography,
   Divider,
   Button,
@@ -24,19 +23,29 @@ import {
   Delete as DeleteIcon,
   Schedule as ScheduleIcon
 } from '@mui/icons-material';
-import { getNotifications, getUnreadCount, markAsRead, markAllAsRead, deleteNotification } from '../api/notifications';
+import type { Notification } from '../api/notifications';
+import {
+  getNotifications,
+  getUnreadCount,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+} from '../api/notifications';
 
-const NotificationDropdown = ({ userId }) => {
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const intervalRef = useRef(null);
+interface NotificationDropdownProps {
+  userId: number;
+}
+
+const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ userId }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const open = Boolean(anchorEl);
 
-  const handleClick = (event) => {
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
     fetchNotifications();
   };
@@ -70,7 +79,7 @@ const NotificationDropdown = ({ userId }) => {
     }
   };
 
-  const handleMarkAsRead = async (notificationId) => {
+  const handleMarkAsRead = async (notificationId: number) => {
     try {
       await markAsRead(notificationId);
       await fetchNotifications();
@@ -88,7 +97,7 @@ const NotificationDropdown = ({ userId }) => {
     }
   };
 
-  const handleDeleteNotification = async (notificationId) => {
+  const handleDeleteNotification = async (notificationId: number) => {
     try {
       await deleteNotification(notificationId);
       await fetchNotifications();
@@ -97,7 +106,7 @@ const NotificationDropdown = ({ userId }) => {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: Notification['status']) => {
     switch (status) {
       case 'pending':
         return 'warning';
@@ -110,7 +119,7 @@ const NotificationDropdown = ({ userId }) => {
     }
   };
 
-  const getStatusText = (status) => {
+  const getStatusText = (status: Notification['status']) => {
     switch (status) {
       case 'pending':
         return 'En attente';
@@ -123,7 +132,7 @@ const NotificationDropdown = ({ userId }) => {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('fr-FR', {
       day: '2-digit',
@@ -135,11 +144,10 @@ const NotificationDropdown = ({ userId }) => {
   };
 
   // Check if notification is within 1 minute of trigger time
-  const isNotificationActive = (notification) => {
+  const isNotificationActive = (notification: Notification) => {
     const now = new Date();
     const triggerTime = new Date(notification.trigger_date);
     const oneMinuteBeforeTrigger = new Date(triggerTime.getTime() - 60000); // 1 minute before trigger
-    
     return now >= oneMinuteBeforeTrigger && now < triggerTime;
   };
 
@@ -152,10 +160,7 @@ const NotificationDropdown = ({ userId }) => {
   // Set up polling for real-time updates
   useEffect(() => {
     fetchUnreadCount();
-    
-    // Poll for unread count every 30 seconds
     intervalRef.current = setInterval(fetchUnreadCount, 30000);
-    
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);

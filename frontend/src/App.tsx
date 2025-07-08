@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate, Outlet } from 'react-router-dom';
-import { Box, CssBaseline, Drawer, List, ListItem, ListItemIcon, ListItemText, AppBar, Toolbar, Typography, IconButton, useMediaQuery, Avatar, Divider, Badge, Fab, Button } from '@mui/material';
+import { Box, CssBaseline, Drawer, List, ListItem, ListItemIcon, ListItemText, AppBar, Toolbar, Typography, IconButton, useMediaQuery, Avatar, Fab, Button } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -9,7 +9,6 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import PeopleIcon from '@mui/icons-material/People';
 import ReceiptIcon from '@mui/icons-material/Receipt';
-import DescriptionIcon from '@mui/icons-material/Description';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import Dashboard from './pages/Dashboard';
@@ -19,12 +18,15 @@ import Charges from './pages/Charges';
 import NotificationDropdown from './components/NotificationDropdown';
 import CreateNotificationForm from './components/CreateNotificationForm';
 import { getTheme } from './theme/theme';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider, useAuth, type User } from './context/AuthContext';
 import { DashboardProvider } from './context/DashboardContext';
 import Login from './pages/Login';
 import AdminUsers from './pages/AdminUsers';
 
 const drawerWidth = 280;
+
+// Permission type for nav items
+// You may want to import this from your types if available
 
 // Separate component that uses useLocation inside Router context
 const Navigation: React.FC<{ mode: 'light' | 'dark' }> = ({ mode }) => {
@@ -33,7 +35,7 @@ const Navigation: React.FC<{ mode: 'light' | 'dark' }> = ({ mode }) => {
   
   const isActive = (path: string) => location.pathname === path;
 
-  const navItems = [
+  const navItems: { text: string; icon: React.ReactNode; path: string; permission: keyof User['permissions'] }[] = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/', permission: 'canViewDashboard' },
     { text: 'Résidences', icon: <HomeWorkIcon />, path: '/residences', permission: 'canViewResidences' },
     { text: 'Clients', icon: <PeopleIcon />, path: '/clients', permission: 'canViewClients' },
@@ -215,15 +217,6 @@ function RequireAuth() {
   return <Outlet />;
 }
 
-// RequireAdmin: Protects routes for admin users only
-function RequireAdmin() {
-  const { user } = useAuth();
-  const location = useLocation();
-  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (user.role !== 'admin') return <Navigate to="/" replace />;
-  return <Outlet />;
-}
-
 // RequirePermission: Protects routes based on specific permissions
 function RequirePermission(permission: string) {
   return function RequirePermissionComponent() {
@@ -328,7 +321,7 @@ const AppContent: React.FC<{
   setCreateNotificationOpen: (open: boolean) => void;
   handleNotificationCreated: () => void;
 }> = ({ mode, toggleDarkMode, createNotificationOpen, setCreateNotificationOpen, handleNotificationCreated }) => {
-  const { user, hasPermission } = useAuth();
+  const { hasPermission } = useAuth();
 
   return (
     <Router>

@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Stack, useTheme, Card, CardContent, CircularProgress, Alert, MenuItem, Select, InputLabel, FormControl,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip
+  TextField, Stack, Card, CardContent, CircularProgress, Alert, MenuItem, Select, InputLabel, FormControl,
+  IconButton, Chip
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import DownloadIcon from '@mui/icons-material/Download';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -26,7 +25,6 @@ interface InvoiceWithClient extends Invoice {
 }
 
 const Invoices: React.FC = () => {
-  const theme = useTheme();
   const [clients, setClients] = useState<Client[]>([]);
   const [invoices, setInvoices] = useState<InvoiceWithClient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,21 +123,6 @@ const Invoices: React.FC = () => {
     } catch (err) {
       setError('Erreur lors du téléchargement du PDF.');
     }
-  };
-
-  const handleOpenInvoiceDialog = (invoice?: Invoice) => {
-    if (invoice) {
-      setSelectedInvoice(invoice);
-      setInvoiceMonth(invoice.month.toString());
-      setInvoiceYear(invoice.year.toString());
-      setInvoiceAmount(invoice.amount.toString());
-    } else {
-      setSelectedInvoice(null);
-      setInvoiceMonth('');
-      setInvoiceYear('');
-      setInvoiceAmount('');
-    }
-    setInvoiceDialogOpen(true);
   };
 
   const handleCloseInvoiceDialog = () => {

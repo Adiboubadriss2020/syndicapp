@@ -10,7 +10,6 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Snackbar
 } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -19,22 +18,36 @@ import { fr } from 'date-fns/locale';
 import { createNotification } from '../api/notifications';
 import { useAuth } from '../context/AuthContext';
 
-const CreateNotificationForm = ({
+interface CreateNotificationFormProps {
+  open: boolean;
+  onClose: () => void;
+  userId: number;
+  onNotificationCreated?: () => void;
+}
+
+interface NotificationFormData {
+  title: string;
+  description: string;
+  trigger_date: string;
+  user_id: number;
+}
+
+const CreateNotificationForm: React.FC<CreateNotificationFormProps> = ({
   open,
   onClose,
   userId,
   onNotificationCreated
 }) => {
   const { hasPermission } = useAuth();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<NotificationFormData>({
     title: '',
     description: '',
     trigger_date: new Date().toISOString(),
     user_id: userId
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   if (!hasPermission('canCreateNotifications')) {
     return (
@@ -50,14 +63,14 @@ const CreateNotificationForm = ({
     );
   }
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: keyof NotificationFormData, value: string | Date) => {
     setFormData(prev => ({
       ...prev,
-      [field]: field === 'trigger_date' ? value.toISOString() : value
+      [field]: field === 'trigger_date' ? (value as Date).toISOString() : value
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!formData.title.trim() || !formData.description.trim()) {

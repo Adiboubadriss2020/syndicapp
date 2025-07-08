@@ -1,42 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
 import { useLocation } from 'react-router-dom';
+import type { DashboardStats } from '../api/dashboard';
 import { fetchDashboardStats } from '../api/dashboard';
+import type { Charge } from '../api/charges';
 import { getCharges } from '../api/charges';
 import { getPaymentsByMonth } from '../api/payments';
 import { useAuth } from '../context/AuthContext';
 import { useDashboard } from '../context/DashboardContext';
 import type { Payment } from '../api/payments';
 
-interface DashboardStats {
-  totalResidences: number;
-  totalClients: number;
-  totalCharges: number;
-  totalBalance: number;
-  monthlyRevenues: number;
-  monthlyCharges: number;
-  netRevenue: number;
-  chartData: { month: string; revenues: number; charges: number; net: number }[];
-}
-
-interface Charge {
-  id: number;
-  date: string;
-  description: string;
-  amount: number;
-  residence_id: number;
-  Residence?: { id: number; name: string };
-}
-
 const COLORS = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14'];
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [charges, setCharges] = useState<Charge[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [paymentsByMonth, setPaymentsByMonth] = useState<{ [month: string]: Payment[] }>({});
@@ -319,7 +301,7 @@ const Dashboard: React.FC = () => {
                 }}>
                 <i className="bi bi-people-fill fs-4"></i>
               </div>
-              <h6 className="card-subtitle mb-1 text-whitet small fw-semibold">Clients</h6>
+              <h6 className="card-subtitle mb-1 text-white small fw-semibold">Clients</h6>
               <h5 className="card-title mb-0 fw-bold">{stats?.totalClients || 0}</h5>
             </div>
           </div>
@@ -491,7 +473,7 @@ const Dashboard: React.FC = () => {
                       fill="#8884d8"
                       dataKey="total"
                     >
-                      {residenceData.map((entry, index) => (
+                      {residenceData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -552,7 +534,7 @@ const Dashboard: React.FC = () => {
                       name="Total des Charges"
                       radius={[6, 6, 0, 0]}
                     >
-                      {residenceData.map((entry, index) => (
+                      {residenceData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Bar>

@@ -14,8 +14,6 @@ import type { GridColDef } from '@mui/x-data-grid';
 import { getClients, addClient, updateClient, deleteClient } from '../api/clients';
 import { getResidences } from '../api/residences';
 import * as XLSX from 'xlsx';
-import { getPaymentsByClient, upsertPayment } from '../api/payments';
-import type { Payment } from '../api/payments';
 import api from '../api/axios';
 import { upsertInvoice, getInvoicesByClient, generateInvoicePdf, downloadInvoicePdf } from '../api/invoices';
 import { exportClientsToExcel } from '../utils/excelExport';
@@ -60,12 +58,10 @@ const Clients: React.FC = () => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 7 });
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [clientPayments, setClientPayments] = useState<Payment[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
-  const [markingPaid, setMarkingPaid] = useState(false);
-  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
-  const [invoiceClient, setInvoiceClient] = useState<Client | null>(null);
+  const [invoiceDialogOpen] = useState(false);
+  const [invoiceClient] = useState<Client | null>(null);
   const [invoiceMonth, setInvoiceMonth] = useState('');
   const [invoiceYear, setInvoiceYear] = useState('');
   const [invoiceAmount, setInvoiceAmount] = useState('');
@@ -268,47 +264,6 @@ const Clients: React.FC = () => {
     setHistoryError(null);
   };
 
-  const handleMarkPaid = async (clientId: number, month: string, paid: boolean) => {
-    setMarkingPaid(true);
-    try {
-      await upsertPayment({ client_id: clientId, month, status: paid ? 'Payé' : 'Non Payé' });
-      // Refresh payments
-      const payments = await getPaymentsByClient(clientId);
-      setClientPayments(payments);
-    } catch {
-      setHistoryError('Erreur lors de la mise à jour du paiement.');
-    } finally {
-      setMarkingPaid(false);
-    }
-  };
-
-  const handleExportPDF = (clientId: number, month: string) => {
-    // Stub: Replace with real export logic
-    alert(`Export PDF for client ${clientId}, month ${month}`);
-  };
-
-  const handleOpenInvoiceDialog = (client: Client) => {
-    setInvoiceClient(client);
-    setInvoiceDialogOpen(true);
-    setInvoiceMonth('');
-    setInvoiceYear('');
-    setInvoiceAmount('');
-    setInvoiceStatus('Payé');
-    setInvoiceError(null);
-    setInvoiceSuccess(null);
-  };
-
-  const handleCloseInvoiceDialog = () => {
-    setInvoiceDialogOpen(false);
-    setInvoiceClient(null);
-    setInvoiceMonth('');
-    setInvoiceYear('');
-    setInvoiceAmount('');
-    setInvoiceStatus('Payé');
-    setInvoiceError(null);
-    setInvoiceSuccess(null);
-  };
-
   const handleInvoiceSubmit = async () => {
     setInvoiceLoading(true);
     setInvoiceError(null);
@@ -330,7 +285,7 @@ const Clients: React.FC = () => {
       // Trigger dashboard refresh
       triggerDashboardRefresh();
       setTimeout(() => {
-        handleCloseInvoiceDialog();
+        handleCloseDialog();
       }, 1200);
     } catch (err: any) {
       setInvoiceError(err?.response?.data?.error || 'Erreur lors de l\'enregistrement de la facture.');
@@ -348,7 +303,7 @@ const Clients: React.FC = () => {
         amount: Number(client.balance),
         status: checked ? 'Payé' : 'Non Payé',
       });
-      await updateClient(client.id, { payment_status: checked ? 'Payé' : 'Non Payé' });
+      await updateClient(client.id, { residence_id: client.residence_id, name: client.name, balance: client.balance, payment_status: checked ? 'Payé' : 'Non Payé' });
       // Automatically generate PDF if switched to Payé
       if (checked) {
         try {
@@ -480,9 +435,7 @@ const Clients: React.FC = () => {
           console.log('Invoice result for', client.name, ':', invoiceResult.data);
           
           // Then update the client status
-          const clientResult = await updateClient(client.id, { 
-            payment_status: setToPaid ? 'Payé' : 'Non Payé' 
-          });
+          const clientResult = await updateClient(client.id, { residence_id: client.residence_id, name: client.name, balance: client.balance, payment_status: setToPaid ? 'Payé' : 'Non Payé' });
           console.log('Client update result for', client.name, ':', clientResult);
           
           console.log('Successfully processed client:', client.name);
@@ -997,7 +950,7 @@ const Clients: React.FC = () => {
         </DialogActions>
       </Dialog>
       {/* Invoice Dialog */}
-      <Dialog open={invoiceDialogOpen} onClose={handleCloseInvoiceDialog} maxWidth="xs" fullWidth>
+      <Dialog open={invoiceDialogOpen} onClose={handleCloseDialog} maxWidth="xs" fullWidth>
         <DialogTitle>Ajouter/Modifier Facture - {invoiceClient?.name}</DialogTitle>
         <DialogContent>
           <Box display="flex" flexDirection="column" gap={2} mt={1}>
@@ -1038,7 +991,7 @@ const Clients: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseInvoiceDialog} disabled={invoiceLoading}>Annuler</Button>
+          <Button onClick={handleCloseDialog} disabled={invoiceLoading}>Annuler</Button>
           <Button onClick={handleInvoiceSubmit} variant="contained" color="primary" disabled={invoiceLoading}>
             {invoiceLoading ? 'Enregistrement...' : 'Enregistrer'}
           </Button>
