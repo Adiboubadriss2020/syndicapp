@@ -26,7 +26,5 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
 
 // Helper function to get the base URL
 export const getBaseUrl = () => {
-  return process.env.NODE_ENV === 'production' 
-    ? 'https://your-production-domain.com' 
-    : 'http://localhost:5050';
+  return import.meta.env.VITE_API_URL || 'http://localhost:5050';
 }; 
